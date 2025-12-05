@@ -11,11 +11,11 @@ enum Direction {
 #[derive(Debug)]
 struct Turn {
     dir: Direction,
-    ticks: u32,
+    ticks: i32,
 }
 
 struct TurnResult {
-    traversals_thru_zero: u32,
+    traversals_thru_zero: i32,
     dial: i32,
 }
 
@@ -27,16 +27,16 @@ fn do_turn(turn: &Turn, dial: i32) -> TurnResult {
             dir: Direction::Right,
             ticks,
         } => {
-            next_dial = dial + *ticks as i32;
-            traversals_thru_zero = (next_dial / 100) as u32;
+            next_dial = dial + *ticks;
+            traversals_thru_zero = next_dial / 100;
         }
         Turn {
             dir: Direction::Left,
             ticks,
         } => {
-            next_dial = dial - *ticks as i32;
+            next_dial = dial - *ticks;
             if next_dial <= 0 {
-                traversals_thru_zero = 1 + (next_dial.unsigned_abs() / 100);
+                traversals_thru_zero = 1 + (next_dial.abs() / 100);
                 // Don't double count the 0 position we started on
                 if dial == 0 {
                     traversals_thru_zero -= 1;
@@ -86,8 +86,9 @@ fn main() -> io::Result<()> {
         let ticks = ticks
             .iter()
             .collect::<String>()
-            .parse::<u32>()
+            .parse::<i32>()
             .expect("Malformed tick count");
+        assert!(ticks >= 0);
         turns.push(Turn {
             dir: direction,
             ticks,
@@ -95,7 +96,7 @@ fn main() -> io::Result<()> {
     }
 
     let mut zeros_at_end_of_rotation: u32 = 0; // Only count zeros once the turn is done
-    let mut zeros_during_rotation: u32 = 0; // Count zeros both when turn is done and during the turn
+    let mut zeros_during_rotation = 0; // Count zeros both when turn is done and during the turn
     let mut dial: i32 = 50;
     for turn in turns.iter() {
         let result = do_turn(turn, dial);
